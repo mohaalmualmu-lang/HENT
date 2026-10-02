@@ -87,7 +87,7 @@ function caseIx(cfg) {
     if (i >= cfg.steps.length) { stage.append(h('div', { class: 'fb ok', html: cfg.end || 'Case complete.' })); box.complete(); return; }
     const st = cfg.steps[i];
     if (st.vitals) { vit = Object.assign(vit, st.vitals); paintV(); }
-    if (st.img) stage.append(h('img', { class: 'qimg', src: IMG[st.img], alt: 'Case image', onclick: () => lightbox(imgEl(st.img, 'Case image')) }));
+    if (st.img) stage.append(h('img', { class: 'qimg', src: imgSrc(st.img), alt: 'Case image', onclick: () => lightbox(imgEl(st.img, 'Case image')) }));
     stage.append(h('div', { class: 'scene', html: st.scene }), h('div', { class: 'stem', html: st.q }));
     const ch = h('div', { class: 'choices' }); stage.append(ch);
     shuffle(st.o.map((o, k) => ({ o, k }))).forEach(({ o, k }) => {

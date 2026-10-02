@@ -69,6 +69,8 @@ for (const theme of themes) {
     if (!st.done) problems.push(`[${theme}] ${mid} did not reach module end (at ${st.at}/${st.steps})`);
     st.ix.filter(x => x[1] !== 'done').forEach(x => problems.push(`[${theme}] ${mid} interactive ${x[0]} not completed (${x[1]})`));
     await overflow(mid);
+    const broken = await p.evaluate(() => [...document.querySelectorAll('img')].filter(i => !i.getAttribute('src') || (i.complete && i.naturalWidth === 0)).map(i => i.alt || '(no alt)'));
+    if (broken.length) problems.push(`[${theme}] ${mid} broken images: ${broken.slice(0, 6).join(', ')}`);
     // module end: lock-in & recall
     await p.evaluate(() => { const b = [...document.querySelectorAll('button')].find(x => /Start lock-in/.test(x.textContent)); b && b.click(); });
     await p.waitForTimeout(100);
@@ -83,6 +85,8 @@ for (const theme of themes) {
     if (t === 'cards') { await p.click('.flashcard').catch(() => { }); await p.waitForTimeout(80); await p.click('.srsbtns .btn.primary').catch(() => { }); }
     if (t === 'exam') { await p.click('text=Start exam'); await p.waitForTimeout(300); await p.evaluate(() => document.querySelectorAll('.qcard').forEach(q => { const c = q.querySelector('.opt[data-correct="1"]'); c && c.click(); })); await p.waitForTimeout(900); const res = await p.$('#exam-results'); if (!res) problems.push(`[${theme}] exam results did not render`); }
     await overflow('tool ' + t);
+    const bt = await p.evaluate(() => [...document.querySelectorAll('img')].filter(i => !i.getAttribute('src') || (i.complete && i.naturalWidth === 0)).length);
+    if (bt) problems.push(`[${theme}] tool ${t}: ${bt} broken images`);
     if (theme === 'dark') await p.screenshot({ path: path.join(OUT, `tool-${t}-${theme}.png`) });
   }
   const gains = await p.evaluate(() => window.__gains || []);

@@ -90,7 +90,7 @@ function renderQ(q, opts = {}) {
   box.append(h('div', { class: 'row', style: { justifyContent: 'space-between' } },
     h('span', { class: 'eyebrow' }, opts.label || (q.lv === 'A' ? 'Apply' : q.lv === 'U' ? 'Understand' : q.num ? 'Numbers' : q.fig ? 'Figure' : 'Recall')),
     h('span', { class: 'row', style: { gap: '6px' } }, srcPills(q))));
-  if (q.img) box.append(h('img', { class: 'qimg', src: IMG[q.img], alt: 'Question image', onclick: () => lightbox(imgEl(q.img, 'Question image')) }));
+  if (q.img) box.append(h('img', { class: 'qimg', src: imgSrc(q.img), alt: 'Question image', onclick: () => lightbox(imgEl(q.img, 'Question image')) }));
   if (q.fig) box.append(figDotView(q.fig.id, q.fig.i));
   box.append(h('div', { class: 'stem', html: q.s }));
   const optsEl = h('div', { class: 'opts', role: 'group' });

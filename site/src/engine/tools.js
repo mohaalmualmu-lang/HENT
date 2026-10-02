@@ -60,11 +60,15 @@ const TOOLS = {
     MODS.forEach(m => { const rs = refs.filter(r => (S.mistakes[r].m || refModule(r)) === m.id); if (!rs.length) return; M.append(h('div', { class: 'sec' }, h('h2', null, m.n + ' · ' + m.title + ' (' + rs.length + ')'), h('span', { class: 'rule' })), h('div', { class: 'stack' }, rs.map(r => renderRef(r)))); });
   } },
   numbers: { name: 'Numbers drill', icon: 'numbers', blurb: 'Every number in your files', render(M) {
-    const tbl = h('div', { class: 'tbl' }, h('table', null, h('thead', null, h('tr', null, h('th', null, 'Value'), h('th', null, 'What'), h('th', null, 'Source'))), h('tbody', null, NUMS.map(n => h('tr', null, h('td', null, h('span', { class: 'n' }, n.v)), h('td', { html: n.q + (n.flag ? ' <span class="pill flag">⚑</span>' : '') }), h('td', { class: 'mono' }, n.src))))));
+    const tbl = h('div', { class: 'stack', style: { gap: '8px' } }, NUMS.map(n => h('div', { class: 'result-row' }, h('div', { class: 'stack', style: { gap: '4px' } }, h('span', null, h('span', { class: 'n' }, n.v), n.flag ? h('span', { class: 'pill flag', style: { marginLeft: '6px' } }, '⚑') : null), h('span', { html: n.q })), h('span', { class: 'pill src' }, n.src))));
     M.append(...page('Numbers drill', NUMS.length + ' numbers', h('div', { class: 'row' }, h('button', { class: 'btn primary small', onclick: () => startExam({ refs: shuffle(NUMS.filter(n => n.d).map(n => 'N:' + n.id)), feedback: 'instant', title: 'Numbers drill' }) }, 'Quiz me on all numbers')), tbl));
   } },
   spell: { name: 'Spelling drill', icon: 'spell', blurb: 'Your handwritten terms + key terms', render(M) {
-    M.append(...page('Spelling drill', SPELL.length + ' terms · from your handwritten list (p167) and key terms', h('div', { class: 'stack' }, shuffle(SPELL).map(t => renderSpell(t)))));
+    const hw = h('section', { class: 'card' }, h('span', { class: 'eyebrow' }, 'From your handwriting (B)'),
+      h('div', { class: 'tbl fit' }, h('table', null, h('thead', null, h('tr', null, h('th', null, 'Where'), h('th', null, 'You wrote'), h('th', null, 'Meaning'))),
+        h('tbody', null, HANDWRITING.map(r => h('tr', null, h('td', { class: 'mono' }, r[0]), h('td', { html: r[1] }), h('td', { html: r[2] })))))),
+      h('p', { class: 'muted', style: { fontSize: '14px' } }, 'Page 167 looks like a numbered spelling list plus “التعداد” (enumeration), so this site drills spelling and list recall.'));
+    M.append(...page('Spelling drill', SPELL.length + ' terms · from your handwritten list (p167) and key terms', hw, h('div', { class: 'stack' }, shuffle(SPELL).map(t => renderSpell(t)))));
   } },
   cheat: { name: 'Cheat sheet', icon: 'cheat', blurb: 'Every list and table, searchable', render(M) {
     const inp = h('input', { type: 'search', id: 'cheat-q', placeholder: 'Filter lists… (e.g. tripod, 20 minutes)', value: TOOLS.cheat.q || '' });
@@ -87,6 +91,16 @@ const TOOLS = {
   } },
   settings: { name: 'Settings', icon: 'settings', blurb: 'Questions, theme, sound, labels', render(M) { renderSettings(M); } },
 };
+
+const HANDWRITING = [
+  ['B9 · p14', 'Ecchymosis … discoloration', 'Ecchymosis = discoloration'], ['B9 · p15', 'Conjunctivae', 'spelling'],
+  ['B13 · p21', '<span lang="ar" class="ar">مياه زرقاء</span>', 'Glaucoma'], ['B20 · p32', '<span lang="ar" class="ar">معدي</span>', 'contagious'],
+  ['B22 · p36', 'Hordeolum', 'stye'], ['B28 · p47', 'TB', 'Tuberculosis'], ['B30 · p50', 'Papilledema', 'spelling'],
+  ['B51 · p82', 'Labyrinthitis', 'spelling'], ['B76 · p118', '<span lang="ar" class="ar">عسر هضم</span>', 'Indigestion'],
+  ['B84 · p129', 'Dentalgia', 'spelling'], ['B87 · p134', '<span lang="ar" class="ar">التهاب اللثة</span>', 'Gingivitis'],
+  ['B96 · p146', 'Epiglottitis', 'spelling'], ['B99 · p151', '<span lang="ar" class="ar">بحة</span>', 'Hoarseness'],
+  ['B106 · p161', 'Pharyngitis', 'spelling'], ['p167', '3- Papl… · 4- Trachiti… · <span lang="ar" class="ar">خلص</span> (circled) · <span lang="ar" class="ar">التعداد ①</span>', 'numbered spelling list (Papilledema, Tracheitis); enumeration'],
+];
 
 /* ---------- exam ---------- */
 function renderExamBuilder(M) {

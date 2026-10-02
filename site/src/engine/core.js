@@ -185,8 +185,9 @@ function lightbox(content, title) {
   document.body.append(lb); document.addEventListener('keydown', onKey); lb.querySelector('button').focus();
   return lb;
 }
+function imgSrc(id) { return IMG[id] || IMG['ph_' + id] || IMG['fig_' + id] || ''; }
 function imgEl(id, alt, extra) {
-  return h('img', Object.assign({ src: IMG[id] || '', alt: alt || '', decoding: 'async' }, extra || {}));
+  return h('img', Object.assign({ src: imgSrc(id), alt: alt || '', decoding: 'async' }, extra || {}));
 }
 function zoomable(id, alt) {
   const im = imgEl(id, alt); im.addEventListener('click', () => lightbox(imgEl(id, alt), alt)); return im;

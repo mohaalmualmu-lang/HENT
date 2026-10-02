@@ -686,3 +686,4 @@ No embedded videos or hyperlinks in either file. No tables exist as pasted image
 5. Nose route "**Faster than intravenous** administration" (A55n, A-only). Standard references describe intranasal as fast but not generally faster than IV.
 6. "Ophthalmologists are not trained to recognize iritis" (B29, B-only). This is not a standard statement; recognising iritis is core ophthalmology.
 7. Otitis media described as an infection from bacterial growth "in the ear canal" (A53, B55); the middle ear is behind the eardrum, not in the canal.
+8. Ophthalmoscope Skill Drill 19-1: "Move nasally to observe the macula" (A21n, A-only). Standard references place the macula temporal to the optic disc.
