@@ -68,6 +68,7 @@ const DEFAULT_STATE = {
   streak: 0, best: 0,
   seenCards: {},
   listenPos: {},   // card id -> sentence index where reading stopped
+  wcal: {},        // voice name -> word-timing factor learned while reading
 };
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
 function load() {

@@ -6,7 +6,7 @@
   --fg:#e2eef0; --muted:#8ba4a9; --faint:#5d777c;
   --teal:#2ed3c3; --teal-ink:#06302c; --teal-soft:rgba(46,211,195,.14);
   --cyan:#55c2ef; --cyan-soft:rgba(85,194,239,.13);
-  --amber:#f2b648; --amber-soft:rgba(242,182,72,.15);
+  --amber:#f2b648; --amber-soft:rgba(242,182,72,.15); --on-amber:#1a1200;
   --coral:#ff6d60; --coral-soft:rgba(255,109,96,.14);
   --violet:#b39cff; --violet-soft:rgba(179,156,255,.14);
   --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -23,7 +23,7 @@
   --fg:#0f2328; --muted:#4c676d; --faint:#7d969b;
   --teal:#0a8c80; --teal-ink:#ffffff; --teal-soft:rgba(10,140,128,.11);
   --cyan:#0b77a8; --cyan-soft:rgba(11,119,168,.1);
-  --amber:#9a5c00; --amber-soft:rgba(214,146,20,.16);
+  --amber:#9a5c00; --amber-soft:rgba(214,146,20,.16); --on-amber:#ffffff;
   --coral:#c43a2e; --coral-soft:rgba(196,58,46,.1);
   --violet:#5a43c8; --violet-soft:rgba(90,67,200,.1);
   --shadow:0 8px 24px rgba(18,52,58,.12);
@@ -35,7 +35,7 @@
   --fg:#0f2328; --muted:#4c676d; --faint:#7d969b;
   --teal:#0a8c80; --teal-ink:#ffffff; --teal-soft:rgba(10,140,128,.11);
   --cyan:#0b77a8; --cyan-soft:rgba(11,119,168,.1);
-  --amber:#9a5c00; --amber-soft:rgba(214,146,20,.16);
+  --amber:#9a5c00; --amber-soft:rgba(214,146,20,.16); --on-amber:#ffffff;
   --coral:#c43a2e; --coral-soft:rgba(196,58,46,.1);
   --violet:#5a43c8; --violet-soft:rgba(90,67,200,.1);
   --shadow:0 8px 24px rgba(18,52,58,.12);
@@ -80,7 +80,7 @@ img{max-width:100%;display:block}
   font:600 11px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-radius:10px}
 .bottomnav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .bottomnav button[aria-current="page"]{color:var(--teal)}
-.bottomnav .badge{font:700 10px/1 var(--f-mono);background:var(--amber);color:#1a1200;border-radius:99px;padding:2px 5px;margin-left:2px}
+.bottomnav .badge{font:700 10px/1 var(--f-mono);background:var(--amber);color:var(--on-amber);border-radius:99px;padding:2px 5px;margin-left:2px}
 
 .eyebrow{font:600 11.5px/1.2 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .h-page{font-size:clamp(28px,7vw,40px);font-weight:700}
@@ -326,10 +326,12 @@ input[type="range"]{width:100%;accent-color:var(--teal);min-height:36px}
 @keyframes slideInR{from{transform:translateX(28px);opacity:.3}to{transform:none;opacity:1}}
 @keyframes slideInL{from{transform:translateX(-28px);opacity:.3}to{transform:none;opacity:1}}
 .slidebar{position:fixed;left:0;right:0;z-index:44;bottom:calc(var(--nav-h) + 8px + env(safe-area-inset-bottom,0px));
-  display:grid;grid-template-columns:1fr auto 1.4fr;gap:10px;padding:8px 16px;max-width:760px;margin:0 auto;
+  display:flex;gap:10px;padding:8px 16px;max-width:760px;margin:0 auto;
   background:linear-gradient(to top,var(--bg) 70%,transparent)}
+.slidebar #slidePrev{flex:1 1 0;min-width:0}
+.slidebar #slideNext{flex:1.4 1 0;min-width:0}
 .slidebar .btn{min-height:50px;font-size:16px;box-shadow:var(--shadow)}
-.slidebar .listenbtn{width:54px;padding:0}
+.slidebar .listenbtn{flex:0 0 54px;width:54px;padding:0}
 .slidebar .listenbtn svg,.listen svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .listen{gap:6px}
 .listen.on,.listenbtn.on{border-color:var(--amber);color:var(--amber);background:var(--amber-soft)}
@@ -348,7 +350,39 @@ body.player-on .wrap.slides-on{padding-bottom:calc(var(--nav-h) + 210px + env(sa
 .plab{font:600 11.5px/1.2 var(--f-mono);letter-spacing:.06em;color:var(--amber);text-transform:uppercase}
 .pbtn{min-width:46px;min-height:46px;border-radius:12px;border:1px solid var(--line2);background:var(--surface2);display:grid;place-items:center;padding:0 8px}
 .pbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pbtn.pmain{min-width:64px;background:var(--amber);border-color:var(--amber);color:#1a1200}
+.pbtn.pmain{min-width:64px;background:var(--amber);border-color:var(--amber);color:var(--on-amber)}
 .pbtn.pmain svg{fill:currentColor}
 .pbtn.pclose{min-width:36px;min-height:36px;border:0;background:none;color:var(--muted)}
 .pspeed{font:700 15px/1 var(--f-mono);min-width:62px;color:var(--amber)}
+/* word being spoken: darker than the sentence highlight */
+.w{border-radius:4px;transition:background-color .12s,color .12s,box-shadow .12s}
+.w.w-on{background:var(--amber);color:var(--on-amber);box-shadow:0 0 0 2px var(--amber)}
+.w.w-on *{color:inherit}
+@media (prefers-reduced-motion: reduce){.w{transition:none}}
+/* short screens (phone landscape): compact bars, header scrolls away, and the
+   reading player sits beside Back/Next in one row so the text keeps the room */
+@media (max-height:520px){
+  :root{--nav-h:44px}
+  .monitor{position:static}
+  .bottomnav button{flex-direction:row;gap:6px}
+  .bottomnav button svg{width:18px;height:18px}
+  .wrap.slides-on{padding-block:8px calc(var(--nav-h) + 76px + env(safe-area-inset-bottom,0px))}
+  .slidebar{bottom:calc(var(--nav-h) + 4px + env(safe-area-inset-bottom,0px));padding:6px 16px}
+  .slidebar .btn{min-height:44px}
+  .player{display:flex;align-items:center;gap:4px;padding:4px 6px}
+  .player .prow{gap:4px;flex:1}
+  .player .ptop{order:2;padding:0}
+  .player .plab{display:none}
+  .pbtn{min-width:40px;min-height:42px}
+  .pbtn.pmain{min-width:56px}
+  .pspeed{min-width:52px}
+  body:has(.slides-on) .player{bottom:calc(var(--nav-h) + 62px + env(safe-area-inset-bottom,0px))}
+  body.player-on .wrap{padding-bottom:calc(var(--nav-h) + 76px + env(safe-area-inset-bottom,0px))}
+  body.player-on .wrap.slides-on{padding-bottom:calc(var(--nav-h) + 130px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-height:520px) and (min-width:600px){
+  body.player-on .slidebar{right:auto;width:42%;max-width:none;margin:0;padding-right:4px}
+  body.player-on .slidebar .listenbtn{display:none}
+  body:has(.slides-on) .player{left:auto;right:12px;transform:none;width:calc(58% - 24px);bottom:calc(var(--nav-h) + 6px + env(safe-area-inset-bottom,0px))}
+  body.player-on .wrap.slides-on{padding-bottom:calc(var(--nav-h) + 80px + env(safe-area-inset-bottom,0px))}
+}
