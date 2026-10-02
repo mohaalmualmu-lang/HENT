@@ -67,6 +67,7 @@ const DEFAULT_STATE = {
   recall: {},      // listId -> {hit, tot, t}
   streak: 0, best: 0,
   seenCards: {},
+  listenPos: {},   // card id -> sentence index where reading stopped
 };
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
 function load() {

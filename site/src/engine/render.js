@@ -17,6 +17,12 @@ const ICONS = {
 };
 ICONS.speaker = '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>';
 ICONS.stop = '<rect x="6" y="6" width="12" height="12" rx="2"/>';
+ICONS.play = '<path d="M8 5l11 7-11 7z"/>';
+ICONS.pause = '<path d="M8 5v14M16 5v14"/>';
+ICONS.prev = '<path d="M6 5v14M18 6l-9 6 9 6z"/>';
+ICONS.next = '<path d="M18 5v14M6 6l9 6-9 6z"/>';
+ICONS.restart = '<path d="M4 12a8 8 0 108-8H8"/><path d="M8 1L5 4l3 3"/>';
+ICONS.close = '<path d="M6 6l12 12M18 6L6 18"/>';
 const svgI = n => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = ICONS[n] || ''; return s; };
 let MAIN; let pendingStep = null;
 

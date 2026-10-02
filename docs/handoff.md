@@ -28,7 +28,8 @@ Rebuild: `python3 site/tools/prep_images.py && node site/tools/build.mjs && node
 ## Update — slides + listen
 - Modules now open in **slide mode**: one step per page (card, question, figure, interactive, case), with Back / Next, swipe left/right, arrow keys, section jump, and the 5 “Finish strong” pages at the end. Settings → Module layout switches back to one scrolling page.
 - **Listen**: every study card and think-first answer has a Listen button (and a speaker button in the slide bar). It reads the card’s English paragraphs sentence by sentence and highlights the part being read; Arabic text and slide refs are skipped. Settings: auto-read each card when its slide opens, speed (0.75×–1.3×), voice. The Arabic summary gets its own Listen button when the device has an Arabic voice.
-- Code: `site/src/engine/speech.js`; slide mode in `renderModuleSlides()` (`render.js`).
+- **Reading player** (appears while reading): ⟲ from start · ⏮ previous sentence · ▶/❚❚ pause–resume at the same sentence · ⏭ next sentence · speed button (0.75–1.5×, changes immediately) · ✕ close. The sentence you stopped at is saved per card (`S.listenPos`), so Listen resumes there after a pause, a closed reader, a slide change, a reload, or an interruption (screen off / call / browser dropping speech).
+- Code: `site/src/engine/speech.js` (Speech session + Player); slide mode in `renderModuleSlides()` (`render.js`).
 
 ## Key decisions (change any of them)
 1. Instructor deck assumed = **B** (`EENT & Note.pdf`); only affects ★ on A-only/B-only badges.
