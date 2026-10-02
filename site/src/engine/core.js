@@ -57,7 +57,7 @@ function modById(id) { return MODS.find(m => m.id === id); }
 /* ---------- storage (try/catch everywhere) ---------- */
 const STORE_KEY = 'eent-lab-v1';
 const DEFAULT_STATE = {
-  settings: { qmode: 'inline', theme: 'system', sound: true, lang: 'en' },
+  settings: { qmode: 'inline', theme: 'system', sound: true, lang: 'en', layout: 'slides', autoread: false, rate: 1, voice: '' },
   prog: {},        // modId -> {at: revealed step index, done: bool}
   ixDone: {},      // ixId -> 'done' | 'skip'
   ans: {},         // qid -> {n: attempts, c: correct count, last: 0/1, t: day}

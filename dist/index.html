@@ -51,6 +51,7 @@
 :root[data-theme="dark"]{color-scheme:dark}
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--f-body);margin:0;overflow-x:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -316,6 +317,31 @@ input[type="range"]{width:100%;accent-color:var(--teal);min-height:36px}
 .tbl.fit table{min-width:0}
 .tbl.fit td,.tbl.fit th{padding:7px 8px}
 
+/* ---------- slide mode ---------- */
+.wrap.slides-on{padding-block:12px calc(var(--nav-h) + 96px + env(safe-area-inset-bottom,0px))}
+.slidehead{display:grid;gap:8px;padding-block:2px 10px}
+.slidehead select{min-height:40px;padding:6px 10px;font-size:14px}
+.slidecount{font-size:13px;color:var(--muted);white-space:nowrap}
+.slidestage{position:relative;min-height:50vh}
+.slide{display:grid;gap:12px}
+.slide>*{min-width:0}
+.slidesec{font:600 12px/1.3 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--teal);padding-top:2px}
+.slide .card,.slide .ix,.slide .qcard{animation:none}
+.slide.in-r{animation:slideInR .28s ease-out}
+.slide.in-l{animation:slideInL .28s ease-out}
+@keyframes slideInR{from{transform:translateX(28px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes slideInL{from{transform:translateX(-28px);opacity:.3}to{transform:none;opacity:1}}
+.slidebar{position:fixed;left:0;right:0;z-index:44;bottom:calc(var(--nav-h) + 8px + env(safe-area-inset-bottom,0px));
+  display:grid;grid-template-columns:1fr auto 1.4fr;gap:10px;padding:8px 16px;max-width:760px;margin:0 auto;
+  background:linear-gradient(to top,var(--bg) 70%,transparent)}
+.slidebar .btn{min-height:50px;font-size:16px;box-shadow:var(--shadow)}
+.slidebar .listenbtn{width:54px;padding:0}
+.slidebar .listenbtn svg,.listen svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.listen{gap:6px}
+.listen.on,.listenbtn.on{border-color:var(--amber);color:var(--amber);background:var(--amber-soft)}
+.speaking{background:var(--amber-soft);outline:2px solid var(--amber);outline-offset:2px;border-radius:6px;transition:background .2s}
+li.speaking{list-style-position:inside}
+
 </style>
 <noscript><p style="padding:16px">This study site needs JavaScript.</p></noscript>
 <script>
@@ -389,7 +415,7 @@ function modById(id) { return MODS.find(m => m.id === id); }
 /* ---------- storage (try/catch everywhere) ---------- */
 const STORE_KEY = 'eent-lab-v1';
 const DEFAULT_STATE = {
-  settings: { qmode: 'inline', theme: 'system', sound: true, lang: 'en' },
+  settings: { qmode: 'inline', theme: 'system', sound: true, lang: 'en', layout: 'slides', autoread: false, rate: 1, voice: '' },
   prog: {},        // modId -> {at: revealed step index, done: bool}
   ixDone: {},      // ixId -> 'done' | 'skip'
   ans: {},         // qid -> {n: attempts, c: correct count, last: 0/1, t: day}
@@ -1563,6 +1589,111 @@ function explainTools(card) {
   return [wrap, out];
 }
 
+/* ---- engine/speech.js ---- */
+/* ===== listen: read card paragraphs aloud (Web Speech API) ===== */
+// Wrap each run of inline text in a card body in <span class="say"> so the
+// part being read can be highlighted. List items are spoken one by one.
+function wrapRuns(body) {
+  const inline = n => n.nodeType === 3 || (n.nodeType === 1 && !/^(UL|OL|LI|DIV|P|BR|TABLE|FIGURE)$/.test(n.tagName));
+  let run = [];
+  const flush = () => {
+    if (run.length && run.some(n => n.textContent.trim())) { const sp = document.createElement('span'); sp.className = 'say'; run[0].before(sp); run.forEach(n => sp.append(n)); }
+    run = [];
+  };
+  [...body.childNodes].forEach(n => { if (inline(n)) run.push(n); else flush(); });
+  flush();
+  body.querySelectorAll('li').forEach(li => li.classList.add('say'));
+}
+
+const Speech = {
+  ok: typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window,
+  playing: null,
+  voices() { try { return speechSynthesis.getVoices(); } catch (e) { return []; } },
+  voiceFor(lang) {
+    const vs = this.voices().filter(v => v.lang && v.lang.toLowerCase().startsWith(lang === 'ar' ? 'ar' : 'en'));
+    if (lang !== 'ar' && S.settings.voice) { const v = vs.find(x => x.name === S.settings.voice); if (v) return v; }
+    const score = v => (/natural|neural|premium|enhanced|google|samantha|daniel|serena|aria|jenny|guy/i.test(v.name) ? 2 : 0) + (/en-(us|gb)/i.test(v.lang) ? 1 : 0) + (v.localService ? 0.5 : 0);
+    return vs.sort((a, b) => score(b) - score(a))[0] || null;
+  },
+  hasArabic() { return this.voices().some(v => v.lang && v.lang.toLowerCase().startsWith('ar')); },
+  clean(t, lang) {
+    t = String(t || '').replace(/\s+/g, ' ').trim();
+    if (lang === 'ar') return t;
+    t = t.replace(/[؀-ۿ]+[؀-ۿ\s()]*/g, ' ')            // skip Arabic inside English cards
+      .replace(/\((?:[AB]\d+n?(?:[–,\s-]+[AB]?\d+n?)*)\)/g, ' ')              // (A22n, B20)
+      .replace(/\b(?:A|B)(?: adds| lists| only| slide| outline)?:\s/g, ' ')   // "A:" / "B adds:"
+      .replace(/\bCN\s+(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/g, (m, r) => 'cranial nerve ' + roman(r))
+      .replace(/\b(XII|XI|IX|VIII|VII|VI|III|II|X|V)\b(?!-)/g, r => roman(r))
+      .replace(/\(\s*[.,]?\s*\)/g, ' ').replace(/\(\s*\./g, '.').replace(/\s=\s/g, ': ')
+      .replace(/°/g, ' degrees').replace(/(\d)\s*[–-]\s*(\d)/g, '$1 to $2').replace(/→/g, ', leads to, ')
+      .replace(/[⚑✎★•·]/g, ' ').replace(/\bvs\b/g, 'versus').replace(/\s+/g, ' ').trim();
+    return t;
+  },
+  hasText(root) { return !!root.querySelector('.say'); },
+  chunksOf(root, lang) {
+    const out = [];
+    const head = root.querySelector('h3');
+    if (head && lang !== 'ar') out.push({ el: head, text: this.clean(head.textContent) });
+    const nodes = lang === 'ar' ? [...root.querySelectorAll('.ar li, .ar.body')].filter(n => n.tagName === 'LI' || !n.querySelector('li')) : [...root.querySelectorAll('.say, .flagbox, .beyond')].filter(n => !n.hidden && !n.closest('[hidden]'));
+    nodes.forEach(n => {
+      let text = this.clean(n.textContent, lang);
+      if (n.classList.contains('beyond')) text = text.replace(/^Beyond your notes/i, 'Beyond your notes: ');
+      if (n.classList.contains('flagbox')) text = text.replace(/^⚑?\s*Conflict\s*/i, 'Note on a conflict: ');
+      if (!text) return;
+      // split long runs into sentences so Chrome does not cut them off
+      const parts = text.length > 220 ? text.match(/[^.!?]+(?:[.!?]+(?=\s|$)|$)/g) || [text] : [text];
+      parts.forEach(p => { if (p.trim()) out.push({ el: n, text: p.trim() }); });
+    });
+    return out;
+  },
+  stop() {
+    if (!this.ok) return;
+    try { speechSynthesis.cancel(); } catch (e) { }
+    $$('.speaking').forEach(e => e.classList.remove('speaking'));
+    if (this.playing && this.playing.btn) this.setBtn(this.playing.btn, false);
+    this.playing = null;
+  },
+  setBtn(btn, on) {
+    btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', String(on));
+    const lab = btn.querySelector('.lbl'); if (lab) lab.textContent = on ? (btn.dataset.lang === 'ar' ? 'إيقاف' : 'Stop') : (btn.dataset.lang === 'ar' ? 'استمع' : 'Listen');
+    const ic = btn.querySelector('svg'); if (ic) ic.innerHTML = ICONS[on ? 'stop' : 'speaker'];
+  },
+  play(root, btn, lang) {
+    const chunks = this.chunksOf(root, lang);
+    if (!chunks.length) { toast('Nothing to read on this slide.'); return; }
+    const voice = this.voiceFor(lang);
+    if (lang === 'ar' && !voice) { toast('No Arabic voice on this device.'); return; }
+    this.stop();
+    const run = { btn, i: 0 }; this.playing = run; if (btn) this.setBtn(btn, true);
+    const nextChunk = () => {
+      if (this.playing !== run) return;
+      $$('.speaking').forEach(e => e.classList.remove('speaking'));
+      if (run.i >= chunks.length) { this.stop(); return; }
+      const c = chunks[run.i++];
+      c.el.classList.add('speaking');
+      const r = c.el.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 140) c.el.scrollIntoView({ block: 'center', behavior: RM() ? 'auto' : 'smooth' });
+      const u = new SpeechSynthesisUtterance(c.text);
+      if (voice) u.voice = voice; u.lang = voice ? voice.lang : (lang === 'ar' ? 'ar-SA' : 'en-US');
+      u.rate = +S.settings.rate || 1; u.pitch = 1;
+      u.onend = () => setTimeout(nextChunk, 120);
+      u.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled') toast('Reading stopped (' + e.error + ').'); this.stop(); };
+      try { speechSynthesis.speak(u); } catch (e) { this.stop(); }
+    };
+    nextChunk();
+  },
+  toggle(root, btn, lang) { if (this.playing && this.playing.btn === btn) this.stop(); else this.play(root, btn, lang); },
+  toggleIn(stage, btn) { const root = stage.querySelector('.slide') || stage; this.toggle(root, btn, root.querySelector('.ar.body') && !root.querySelector('.say') ? 'ar' : 'en'); },
+  button(root, lang) {
+    const b = h('button', { class: 'btn small ghost listen', 'data-lang': lang || 'en', 'aria-pressed': 'false', title: lang === 'ar' ? 'استمع للملخص' : 'Listen to this card' }, svgI('speaker'), h('span', { class: 'lbl' }, lang === 'ar' ? 'استمع' : 'Listen'));
+    b.addEventListener('click', () => this.toggle(root, b, lang || 'en'));
+    if (lang === 'ar') { const chk = () => { b.hidden = !this.hasArabic(); }; chk(); try { speechSynthesis.addEventListener('voiceschanged', chk); } catch (e) { } }
+    return b;
+  }
+};
+function roman(r) { return { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10, XI: 11, XII: 12 }[r] || r; }
+if (Speech.ok) { try { speechSynthesis.getVoices(); speechSynthesis.addEventListener('voiceschanged', () => { }); } catch (e) { } }
+addEventListener('hashchange', () => Speech.stop());
+
 /* ---- engine/render.js ---- */
 /* ===== router, home, module flow ===== */
 const ICONS = {
@@ -1581,6 +1712,8 @@ const ICONS = {
   settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
   spell: '<path d="M4 20l5-14 5 14M6 15h6"/><path d="M15 17l2 2 4-5"/>',
 };
+ICONS.speaker = '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>';
+ICONS.stop = '<rect x="6" y="6" width="12" height="12" rx="2"/>';
 const svgI = n => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = ICONS[n] || ''; return s; };
 let MAIN; let pendingStep = null;
 
@@ -1599,7 +1732,7 @@ function go(r) { if (('#' + r) === location.hash || (!r && !location.hash)) rout
 function route() {
   const r = location.hash.replace('#', '');
   $$('.bottomnav button').forEach(b => b.setAttribute('aria-current', (b.dataset.route === r || (b.dataset.route === 'learn' && /^m\d$/.test(r)) || (b.dataset.route === 'tools' && TOOLS[r])) ? 'page' : 'false'));
-  MAIN.innerHTML = ''; window.scrollTo(0, 0);
+  MAIN.innerHTML = ''; MAIN.classList.remove('slides-on'); window.scrollTo(0, 0);
   if (!r) renderHome();
   else if (r === 'learn') renderLearn();
   else if (/^m\d$/.test(r) && modById(r)) renderModule(modById(r));
@@ -1651,7 +1784,8 @@ function toolGrid() {
 /* ---------- module flow ---------- */
 function isGate(s) { return ['think', 'q', 'fig', 'ix', 'sa', 'spell'].includes(s.k); }
 function flowSteps(m) { return m.steps.filter(s => !(S.settings.qmode === 'end' && (s.k === 'q' || s.k === 'sa'))); }
-function renderModule(m) {
+function renderModule(m) { if (S.settings.layout === 'scroll') renderModuleScroll(m); else renderModuleSlides(m); }
+function renderModuleScroll(m) {
   const steps = flowSteps(m);
   const prog = S.prog[m.id] || (S.prog[m.id] = { at: -1, done: false });
   if (prog.at < 0) prog.at = nextGateIndex(steps, -1);
@@ -1696,7 +1830,8 @@ function renderStep(m, s) {
       const ans = h('div', { class: 'reveal', hidden: true, html: s.a });
       const btn = h('button', { class: 'btn small primary' }, 'Reveal');
       btn.addEventListener('click', () => { ans.hidden = false; btn.remove(); });
-      el = h('div', { class: 'card think' }, h('span', { class: 'eyebrow' }, 'Think first'), h('div', { class: 'q', html: s.q }), h('div', { class: 'row' }, btn, h('span', { class: 'row', style: { gap: '6px' } }, srcPills(s))), ans);
+      el = h('div', { class: 'card think' }, h('span', { class: 'eyebrow' }, 'Think first'), h('div', { class: 'q say', html: s.q }), h('div', { class: 'row' }, btn, h('span', { class: 'row', style: { gap: '6px' } }, srcPills(s))), ans);
+      ans.classList.add('say');
       break;
     }
     case 'q': el = h('div', { class: 'stack' }, h('span', { class: 'eyebrow' }, 'Check yourself'), s.ids.map(id => renderRef(id.includes(':') ? id : 'Q:' + id))); break;
@@ -1720,12 +1855,92 @@ function cardEl(s) {
   const c = h('article', { class: 'card appear', id: 'card-' + s.id });
   c.append(h('h3', null, s.h));
   if (s.ph) c.append(h('figure', { class: 'figure' }, zoomable(s.ph, s.h), s.cap ? h('figcaption', null, s.cap) : null));
-  c.append(rich(s.b));
+  const body = rich(s.b); wrapRuns(body); c.append(body);
   if (s.flag) c.append(h('div', { class: 'flagbox', html: '<b>⚑ Conflict · </b>' + s.flag }));
   if (s.beyond) c.append(h('div', { class: 'beyond', html: '<b>Beyond your notes</b>' + s.beyond }));
-  c.append(h('div', { class: 'meta' }, srcPills(s)));
+  c.append(h('div', { class: 'meta' }, srcPills(s), Speech.ok ? Speech.button(c) : null));
   c.append(...explainTools(s));
   return c;
+}
+
+/* ---------- slide mode: one step per page ---------- */
+function buildSlides(m) {
+  const out = []; let sec = '';
+  flowSteps(m).forEach(s => {
+    if (s.k === 'sec') { sec = s.h; return; }
+    if (s.k === 'q') s.ids.forEach((id, j) => out.push({ kind: 'q', ref: id.includes(':') ? id : 'Q:' + id, s, sec, n: j + 1, of: s.ids.length }));
+    else out.push({ kind: 'step', s, sec });
+  });
+  if (S.settings.qmode === 'end') {
+    m.steps.filter(s => s.k === 'q').forEach(s => s.ids.forEach((id, j) => out.push({ kind: 'q', ref: id.includes(':') ? id : 'Q:' + id, s, sec: 'Module questions', n: j + 1, of: s.ids.length })));
+    m.steps.filter(s => s.k === 'sa').forEach(s => out.push({ kind: 'step', s, sec: 'Module questions' }));
+  }
+  [['lock', 'Finish strong · Lock-in'], ['recall', 'Finish strong · Recall'], ['hooks', 'Finish strong · Memory hooks'], ['ar', 'Finish strong · ملخص بالعربي'], ['done', 'Module complete']].forEach(([k, t]) => out.push({ kind: k, sec: t }));
+  return out;
+}
+function renderModuleSlides(m) {
+  const slides = buildSlides(m);
+  const prog = S.prog[m.id] || (S.prog[m.id] = { at: -1, done: false });
+  let at = Math.max(0, Math.min(slides.length - 1, prog.slide || 0));
+  if (pendingStep != null) { const k = slides.findIndex(x => x.s && x.s.i === pendingStep); if (k >= 0) at = k; pendingStep = null; }
+  const secStarts = []; slides.forEach((x, i) => { if (!secStarts.length || secStarts[secStarts.length - 1].sec !== x.sec) secStarts.push({ sec: x.sec, i }); });
+  const bar = h('div', { class: 'progress', role: 'progressbar', 'aria-label': 'Module progress' }, h('i'));
+  const count = h('span', { class: 'mono slidecount', 'aria-live': 'polite' });
+  const jump = h('select', { id: 'jump-' + m.id, 'aria-label': 'Jump to section' }, h('option', { value: '' }, 'Jump to section…'), secStarts.map(x => h('option', { value: x.i }, x.sec)));
+  jump.addEventListener('change', () => { if (jump.value === '') return; show(+jump.value, 1); jump.value = ''; });
+  MAIN.classList.add('slides-on');
+  MAIN.append(h('header', { class: 'slidehead' },
+    h('div', { class: 'row', style: { justifyContent: 'space-between', flexWrap: 'nowrap' } }, h('span', { class: 'eyebrow' }, 'Module ' + m.n + ' · ' + m.title.split(' — ')[0]), count),
+    bar, jump));
+  const stage = h('div', { class: 'slidestage', id: 'slide-stage' }); MAIN.append(stage);
+  const back = h('button', { class: 'btn', id: 'slidePrev', 'aria-label': 'Previous slide' }, '‹ Back');
+  const listen = h('button', { class: 'btn listenbtn', id: 'slideListen', 'aria-label': 'Listen to this slide', hidden: true }, svgI('speaker'));
+  const next = h('button', { class: 'btn primary', id: 'slideNext' }, 'Next ›');
+  const nav = h('nav', { class: 'slidebar', 'aria-label': 'Slide navigation' }, back, listen, next);
+  MAIN.append(nav);
+  back.addEventListener('click', () => show(at - 1, -1));
+  next.addEventListener('click', () => { if (at >= slides.length - 1) { MODS[m.n] ? go(MODS[m.n].id) : go('exam'); return; } show(at + 1, 1); });
+  listen.addEventListener('click', () => Speech.toggleIn(stage, listen));
+  function slideEl(x) {
+    if (x.kind === 'q') return h('div', { class: 'stack' }, h('span', { class: 'eyebrow' }, 'Check yourself · ' + x.n + ' of ' + x.of), renderRef(x.ref));
+    if (x.kind === 'lock') return lockIn(m);
+    if (x.kind === 'recall') return recallScreen(m);
+    if (x.kind === 'hooks') return hooksEl(m);
+    if (x.kind === 'ar') return arabicEl(m);
+    if (x.kind === 'done') return h('section', { class: 'card', style: { textAlign: 'center' } },
+      h('span', { class: 'eyebrow' }, 'Module ' + m.n + ' complete'), h('h2', null, m.title), h('div', { class: 'statrow' },
+        h('div', { class: 'stat' }, h('b', null, moduleMastery(m.id) + '%'), h('span', null, 'mastery')),
+        h('div', { class: 'stat' }, h('b', null, Object.keys(S.mistakes).filter(r => refModule(r) === m.id).length), h('span', null, 'open mistakes')),
+        h('div', { class: 'stat' }, h('b', null, SRS.queue(m.id).length), h('span', null, 'cards due'))),
+      h('div', { class: 'row', style: { justifyContent: 'center' } }, h('button', { class: 'btn', onclick: () => go('mistakes') }, 'My mistakes'), h('button', { class: 'btn', onclick: () => go('cards') }, 'Flashcards')));
+    return renderStep(m, x.s);
+  }
+  function show(i, dir) {
+    if (i < 0 || i >= slides.length) return;
+    Speech.stop();
+    at = i; prog.slide = i; prog.at = Math.max(prog.at, slides[i].s ? flowSteps(m).indexOf(slides[i].s) : prog.at);
+    if (i >= slides.length - 5) prog.done = true;
+    save();
+    const x = slides[i];
+    stage.innerHTML = '';
+    const page = h('div', { class: 'slide ' + (dir > 0 ? 'in-r' : dir < 0 ? 'in-l' : '') , 'data-idx': i, 'data-total': slides.length });
+    page.append(h('div', { class: 'slidesec' }, x.sec || m.title), slideEl(x));
+    stage.append(page);
+    count.textContent = (i + 1) + ' / ' + slides.length;
+    $('i', bar).style.width = Math.round((i + 1) / slides.length * 100) + '%';
+    back.disabled = i === 0;
+    next.textContent = i >= slides.length - 1 ? (MODS[m.n] ? 'Next module ›' : 'Build an exam ›') : 'Next ›';
+    listen.hidden = !Speech.ok || !Speech.hasText(page);
+    window.scrollTo(0, 0);
+    if (S.settings.autoread && !listen.hidden && dir) setTimeout(() => Speech.toggleIn(stage, listen), 350);
+  }
+  // swipe + keys
+  let tx = null, ty = 0;
+  stage.addEventListener('touchstart', e => { const t = e.target; if (t.closest('.labelfig,.threebox,.simstage,input,textarea,select,canvas,.tbl')) { tx = null; return; } tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  stage.addEventListener('touchend', e => { if (tx == null) return; const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; tx = null; if (Math.abs(dx) > 70 && Math.abs(dy) < 50) dx < 0 ? next.click() : show(at - 1, -1); }, { passive: true });
+  const onKey = e => { if (!document.body.contains(stage)) { removeEventListener('keydown', onKey); return; } if (e.target.closest && e.target.closest('input,textarea,select')) return; if (e.key === 'ArrowRight') next.click(); else if (e.key === 'ArrowLeft') show(at - 1, -1); };
+  addEventListener('keydown', onKey);
+  show(at, 0);
 }
 
 /* ---------- end of module ---------- */
@@ -1791,7 +2006,9 @@ function hooksEl(m) {
     h('p', { class: 'muted', style: { fontSize: '13px' } }, 'Hooks are memory aids made for you, not slide content; the facts inside them are from your notes.'));
 }
 function arabicEl(m) {
-  return h('section', { class: 'card', id: 'ar-' + m.id }, h('span', { class: 'eyebrow' }, 'ملخص بالعربي · Arabic summary'), h('div', { class: 'ar body', lang: 'ar', html: m.arSum }));
+  const sec = h('section', { class: 'card', id: 'ar-' + m.id }, h('span', { class: 'eyebrow' }, 'ملخص بالعربي · Arabic summary'), h('div', { class: 'ar body', lang: 'ar', html: m.arSum }));
+  if (Speech.ok) sec.append(h('div', { class: 'meta' }, Speech.button(sec, 'ar')));
+  return sec;
 }
 
 /* ---- engine/tools.js ---- */
@@ -2059,6 +2276,12 @@ function renderSettings(M) {
     opt('set-theme', 'Theme', S.settings.theme, [['system', 'Match my device'], ['dark', 'Dark'], ['light', 'Light']], v => { S.settings.theme = v; save(); applyTheme(); Monitor.col = null; }),
     opt('set-sound', 'Sound', S.settings.sound, [[true, 'On (quiet beeps)'], [false, 'Off']], v => { S.settings.sound = v === 'true'; save(); }),
     opt('set-lang', 'Figure-label language', S.settings.lang, [['en', 'English'], ['ar', 'Arabic'], ['both', 'Both']], v => { S.settings.lang = v; save(); }),
+    opt('set-layout', 'Module layout', S.settings.layout, [['slides', 'Slides — one step per page, Next / Back'], ['scroll', 'One long scrolling page']], v => { S.settings.layout = v; save(); toast('Saved.'); }),
+    Speech.ok ? h('div', { class: 'setting' }, h('b', null, 'Listen (read aloud)'),
+      h('label', { class: 'row', style: { gap: '8px' } }, (() => { const c = h('input', { type: 'checkbox', id: 'set-autoread', checked: S.settings.autoread || null }); c.addEventListener('change', () => { S.settings.autoread = c.checked; save(); }); return c; })(), 'Read each card aloud when I open its slide'),
+      (() => { const sel = h('select', { id: 'set-rate', 'aria-label': 'Reading speed' }, [[0.75, 'Slow (0.75×)'], [0.9, 'Relaxed (0.9×)'], [1, 'Normal (1×)'], [1.15, 'Brisk (1.15×)'], [1.3, 'Fast (1.3×)']].map(([v, t]) => h('option', { value: v, selected: +S.settings.rate === v || null }, t))); sel.addEventListener('change', () => { S.settings.rate = +sel.value; save(); }); return sel; })(),
+      (() => { const sel = h('select', { id: 'set-voice', 'aria-label': 'Voice' }); const fill = () => { const vs = Speech.voices().filter(v => /^en/i.test(v.lang)); sel.innerHTML = ''; sel.append(h('option', { value: '' }, 'Best English voice (automatic)'), ...vs.map(v => h('option', { value: v.name, selected: S.settings.voice === v.name || null }, v.name + ' · ' + v.lang))); }; fill(); try { speechSynthesis.addEventListener('voiceschanged', fill); } catch (e) { } sel.addEventListener('change', () => { S.settings.voice = sel.value; save(); }); return sel; })(),
+      h('button', { class: 'btn small', onclick: () => { const d = h('div', null, h('span', { class: 'say' }, 'This is how your study cards will sound. Cover both eyes to limit damage to the affected eye through sympathetic movement.')); Speech.play(d, null, 'en'); } }, 'Test voice')) : h('div', { class: 'setting' }, h('b', null, 'Listen (read aloud)'), h('span', { class: 'muted' }, 'This browser does not support speech.')),
     h('div', { class: 'setting' }, h('b', null, 'Progress'), reset, confirmRow),
     h('p', { class: 'muted' }, 'Instructor deck assumed: ' + INSTRUCTOR_DECK + ' (badges marked ★). Exam format assumed: mostly 4-option MCQ + short answers.'))));
 }

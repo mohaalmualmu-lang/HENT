@@ -25,6 +25,11 @@ Tools: search, flashcards, exam builder (length, modules, timer, instant/end fee
 
 Rebuild: `python3 site/tools/prep_images.py && node site/tools/build.mjs && node site/tools/audit.mjs && node site/tools/qa.mjs`.
 
+## Update — slides + listen
+- Modules now open in **slide mode**: one step per page (card, question, figure, interactive, case), with Back / Next, swipe left/right, arrow keys, section jump, and the 5 “Finish strong” pages at the end. Settings → Module layout switches back to one scrolling page.
+- **Listen**: every study card and think-first answer has a Listen button (and a speaker button in the slide bar). It reads the card’s English paragraphs sentence by sentence and highlights the part being read; Arabic text and slide refs are skipped. Settings: auto-read each card when its slide opens, speed (0.75×–1.3×), voice. The Arabic summary gets its own Listen button when the device has an Arabic voice.
+- Code: `site/src/engine/speech.js`; slide mode in `renderModuleSlides()` (`render.js`).
+
 ## Key decisions (change any of them)
 1. Instructor deck assumed = **B** (`EENT & Note.pdf`); only affects ★ on A-only/B-only badges.
 2. Exam format assumed = mostly 4-option MCQ + short answers that ask you to **list** or **spell** (from your p167 note).

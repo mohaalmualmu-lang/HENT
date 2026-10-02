@@ -15,6 +15,8 @@ const ICONS = {
   settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
   spell: '<path d="M4 20l5-14 5 14M6 15h6"/><path d="M15 17l2 2 4-5"/>',
 };
+ICONS.speaker = '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>';
+ICONS.stop = '<rect x="6" y="6" width="12" height="12" rx="2"/>';
 const svgI = n => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = ICONS[n] || ''; return s; };
 let MAIN; let pendingStep = null;
 
@@ -33,7 +35,7 @@ function go(r) { if (('#' + r) === location.hash || (!r && !location.hash)) rout
 function route() {
   const r = location.hash.replace('#', '');
   $$('.bottomnav button').forEach(b => b.setAttribute('aria-current', (b.dataset.route === r || (b.dataset.route === 'learn' && /^m\d$/.test(r)) || (b.dataset.route === 'tools' && TOOLS[r])) ? 'page' : 'false'));
-  MAIN.innerHTML = ''; window.scrollTo(0, 0);
+  MAIN.innerHTML = ''; MAIN.classList.remove('slides-on'); window.scrollTo(0, 0);
   if (!r) renderHome();
   else if (r === 'learn') renderLearn();
   else if (/^m\d$/.test(r) && modById(r)) renderModule(modById(r));
@@ -85,7 +87,8 @@ function toolGrid() {
 /* ---------- module flow ---------- */
 function isGate(s) { return ['think', 'q', 'fig', 'ix', 'sa', 'spell'].includes(s.k); }
 function flowSteps(m) { return m.steps.filter(s => !(S.settings.qmode === 'end' && (s.k === 'q' || s.k === 'sa'))); }
-function renderModule(m) {
+function renderModule(m) { if (S.settings.layout === 'scroll') renderModuleScroll(m); else renderModuleSlides(m); }
+function renderModuleScroll(m) {
   const steps = flowSteps(m);
   const prog = S.prog[m.id] || (S.prog[m.id] = { at: -1, done: false });
   if (prog.at < 0) prog.at = nextGateIndex(steps, -1);
@@ -130,7 +133,8 @@ function renderStep(m, s) {
       const ans = h('div', { class: 'reveal', hidden: true, html: s.a });
       const btn = h('button', { class: 'btn small primary' }, 'Reveal');
       btn.addEventListener('click', () => { ans.hidden = false; btn.remove(); });
-      el = h('div', { class: 'card think' }, h('span', { class: 'eyebrow' }, 'Think first'), h('div', { class: 'q', html: s.q }), h('div', { class: 'row' }, btn, h('span', { class: 'row', style: { gap: '6px' } }, srcPills(s))), ans);
+      el = h('div', { class: 'card think' }, h('span', { class: 'eyebrow' }, 'Think first'), h('div', { class: 'q say', html: s.q }), h('div', { class: 'row' }, btn, h('span', { class: 'row', style: { gap: '6px' } }, srcPills(s))), ans);
+      ans.classList.add('say');
       break;
     }
     case 'q': el = h('div', { class: 'stack' }, h('span', { class: 'eyebrow' }, 'Check yourself'), s.ids.map(id => renderRef(id.includes(':') ? id : 'Q:' + id))); break;
@@ -154,12 +158,92 @@ function cardEl(s) {
   const c = h('article', { class: 'card appear', id: 'card-' + s.id });
   c.append(h('h3', null, s.h));
   if (s.ph) c.append(h('figure', { class: 'figure' }, zoomable(s.ph, s.h), s.cap ? h('figcaption', null, s.cap) : null));
-  c.append(rich(s.b));
+  const body = rich(s.b); wrapRuns(body); c.append(body);
   if (s.flag) c.append(h('div', { class: 'flagbox', html: '<b>⚑ Conflict · </b>' + s.flag }));
   if (s.beyond) c.append(h('div', { class: 'beyond', html: '<b>Beyond your notes</b>' + s.beyond }));
-  c.append(h('div', { class: 'meta' }, srcPills(s)));
+  c.append(h('div', { class: 'meta' }, srcPills(s), Speech.ok ? Speech.button(c) : null));
   c.append(...explainTools(s));
   return c;
+}
+
+/* ---------- slide mode: one step per page ---------- */
+function buildSlides(m) {
+  const out = []; let sec = '';
+  flowSteps(m).forEach(s => {
+    if (s.k === 'sec') { sec = s.h; return; }
+    if (s.k === 'q') s.ids.forEach((id, j) => out.push({ kind: 'q', ref: id.includes(':') ? id : 'Q:' + id, s, sec, n: j + 1, of: s.ids.length }));
+    else out.push({ kind: 'step', s, sec });
+  });
+  if (S.settings.qmode === 'end') {
+    m.steps.filter(s => s.k === 'q').forEach(s => s.ids.forEach((id, j) => out.push({ kind: 'q', ref: id.includes(':') ? id : 'Q:' + id, s, sec: 'Module questions', n: j + 1, of: s.ids.length })));
+    m.steps.filter(s => s.k === 'sa').forEach(s => out.push({ kind: 'step', s, sec: 'Module questions' }));
+  }
+  [['lock', 'Finish strong · Lock-in'], ['recall', 'Finish strong · Recall'], ['hooks', 'Finish strong · Memory hooks'], ['ar', 'Finish strong · ملخص بالعربي'], ['done', 'Module complete']].forEach(([k, t]) => out.push({ kind: k, sec: t }));
+  return out;
+}
+function renderModuleSlides(m) {
+  const slides = buildSlides(m);
+  const prog = S.prog[m.id] || (S.prog[m.id] = { at: -1, done: false });
+  let at = Math.max(0, Math.min(slides.length - 1, prog.slide || 0));
+  if (pendingStep != null) { const k = slides.findIndex(x => x.s && x.s.i === pendingStep); if (k >= 0) at = k; pendingStep = null; }
+  const secStarts = []; slides.forEach((x, i) => { if (!secStarts.length || secStarts[secStarts.length - 1].sec !== x.sec) secStarts.push({ sec: x.sec, i }); });
+  const bar = h('div', { class: 'progress', role: 'progressbar', 'aria-label': 'Module progress' }, h('i'));
+  const count = h('span', { class: 'mono slidecount', 'aria-live': 'polite' });
+  const jump = h('select', { id: 'jump-' + m.id, 'aria-label': 'Jump to section' }, h('option', { value: '' }, 'Jump to section…'), secStarts.map(x => h('option', { value: x.i }, x.sec)));
+  jump.addEventListener('change', () => { if (jump.value === '') return; show(+jump.value, 1); jump.value = ''; });
+  MAIN.classList.add('slides-on');
+  MAIN.append(h('header', { class: 'slidehead' },
+    h('div', { class: 'row', style: { justifyContent: 'space-between', flexWrap: 'nowrap' } }, h('span', { class: 'eyebrow' }, 'Module ' + m.n + ' · ' + m.title.split(' — ')[0]), count),
+    bar, jump));
+  const stage = h('div', { class: 'slidestage', id: 'slide-stage' }); MAIN.append(stage);
+  const back = h('button', { class: 'btn', id: 'slidePrev', 'aria-label': 'Previous slide' }, '‹ Back');
+  const listen = h('button', { class: 'btn listenbtn', id: 'slideListen', 'aria-label': 'Listen to this slide', hidden: true }, svgI('speaker'));
+  const next = h('button', { class: 'btn primary', id: 'slideNext' }, 'Next ›');
+  const nav = h('nav', { class: 'slidebar', 'aria-label': 'Slide navigation' }, back, listen, next);
+  MAIN.append(nav);
+  back.addEventListener('click', () => show(at - 1, -1));
+  next.addEventListener('click', () => { if (at >= slides.length - 1) { MODS[m.n] ? go(MODS[m.n].id) : go('exam'); return; } show(at + 1, 1); });
+  listen.addEventListener('click', () => Speech.toggleIn(stage, listen));
+  function slideEl(x) {
+    if (x.kind === 'q') return h('div', { class: 'stack' }, h('span', { class: 'eyebrow' }, 'Check yourself · ' + x.n + ' of ' + x.of), renderRef(x.ref));
+    if (x.kind === 'lock') return lockIn(m);
+    if (x.kind === 'recall') return recallScreen(m);
+    if (x.kind === 'hooks') return hooksEl(m);
+    if (x.kind === 'ar') return arabicEl(m);
+    if (x.kind === 'done') return h('section', { class: 'card', style: { textAlign: 'center' } },
+      h('span', { class: 'eyebrow' }, 'Module ' + m.n + ' complete'), h('h2', null, m.title), h('div', { class: 'statrow' },
+        h('div', { class: 'stat' }, h('b', null, moduleMastery(m.id) + '%'), h('span', null, 'mastery')),
+        h('div', { class: 'stat' }, h('b', null, Object.keys(S.mistakes).filter(r => refModule(r) === m.id).length), h('span', null, 'open mistakes')),
+        h('div', { class: 'stat' }, h('b', null, SRS.queue(m.id).length), h('span', null, 'cards due'))),
+      h('div', { class: 'row', style: { justifyContent: 'center' } }, h('button', { class: 'btn', onclick: () => go('mistakes') }, 'My mistakes'), h('button', { class: 'btn', onclick: () => go('cards') }, 'Flashcards')));
+    return renderStep(m, x.s);
+  }
+  function show(i, dir) {
+    if (i < 0 || i >= slides.length) return;
+    Speech.stop();
+    at = i; prog.slide = i; prog.at = Math.max(prog.at, slides[i].s ? flowSteps(m).indexOf(slides[i].s) : prog.at);
+    if (i >= slides.length - 5) prog.done = true;
+    save();
+    const x = slides[i];
+    stage.innerHTML = '';
+    const page = h('div', { class: 'slide ' + (dir > 0 ? 'in-r' : dir < 0 ? 'in-l' : '') , 'data-idx': i, 'data-total': slides.length });
+    page.append(h('div', { class: 'slidesec' }, x.sec || m.title), slideEl(x));
+    stage.append(page);
+    count.textContent = (i + 1) + ' / ' + slides.length;
+    $('i', bar).style.width = Math.round((i + 1) / slides.length * 100) + '%';
+    back.disabled = i === 0;
+    next.textContent = i >= slides.length - 1 ? (MODS[m.n] ? 'Next module ›' : 'Build an exam ›') : 'Next ›';
+    listen.hidden = !Speech.ok || !Speech.hasText(page);
+    window.scrollTo(0, 0);
+    if (S.settings.autoread && !listen.hidden && dir) setTimeout(() => Speech.toggleIn(stage, listen), 350);
+  }
+  // swipe + keys
+  let tx = null, ty = 0;
+  stage.addEventListener('touchstart', e => { const t = e.target; if (t.closest('.labelfig,.threebox,.simstage,input,textarea,select,canvas,.tbl')) { tx = null; return; } tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+  stage.addEventListener('touchend', e => { if (tx == null) return; const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty; tx = null; if (Math.abs(dx) > 70 && Math.abs(dy) < 50) dx < 0 ? next.click() : show(at - 1, -1); }, { passive: true });
+  const onKey = e => { if (!document.body.contains(stage)) { removeEventListener('keydown', onKey); return; } if (e.target.closest && e.target.closest('input,textarea,select')) return; if (e.key === 'ArrowRight') next.click(); else if (e.key === 'ArrowLeft') show(at - 1, -1); };
+  addEventListener('keydown', onKey);
+  show(at, 0);
 }
 
 /* ---------- end of module ---------- */
@@ -225,5 +309,7 @@ function hooksEl(m) {
     h('p', { class: 'muted', style: { fontSize: '13px' } }, 'Hooks are memory aids made for you, not slide content; the facts inside them are from your notes.'));
 }
 function arabicEl(m) {
-  return h('section', { class: 'card', id: 'ar-' + m.id }, h('span', { class: 'eyebrow' }, 'ملخص بالعربي · Arabic summary'), h('div', { class: 'ar body', lang: 'ar', html: m.arSum }));
+  const sec = h('section', { class: 'card', id: 'ar-' + m.id }, h('span', { class: 'eyebrow' }, 'ملخص بالعربي · Arabic summary'), h('div', { class: 'ar body', lang: 'ar', html: m.arSum }));
+  if (Speech.ok) sec.append(h('div', { class: 'meta' }, Speech.button(sec, 'ar')));
+  return sec;
 }

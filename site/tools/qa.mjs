@@ -38,7 +38,7 @@ for (const theme of themes) {
     if (onlyMod && mid !== onlyMod) continue;
     await p.evaluate(id => { localStorage.clear(); location.hash = id; }, mid);
     await p.waitForTimeout(200);
-    let guard = 0, shots = 0;
+    let guard = 0, shots = 0, listened = false;
     while (guard++ < 400) {
       // answer everything visible and solve every interactive
       await p.evaluate(async () => {
@@ -54,11 +54,19 @@ for (const theme of themes) {
       await p.waitForTimeout(120);
       const ixs = await p.$$('.ix[data-ix]');
       if (theme === 'dark' && shots < 40) for (const el of ixs) { const id = await el.getAttribute('data-ix'); const f = path.join(OUT, `ix-${id}.png`); if (!fs.existsSync(f) || shots < 40) { await el.screenshot({ path: f }).catch(() => { }); shots++; } }
-      const cont = await p.$('.gate button.btn.primary');
-      if (!cont) break;
-      const txt = await cont.textContent();
-      if (!/Continue/.test(txt)) break;
-      await cont.click(); await p.waitForTimeout(80);
+      await p.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find(x => /Start lock-in/.test(x.textContent)); b && b.click();
+        document.querySelectorAll('.qcard .opt[data-correct="1"]:not([disabled])').forEach(c => c.click());
+        const r = [...document.querySelectorAll('button')].find(x => /Reveal & mark/.test(x.textContent)); if (r && !r.dataset.qa) { r.dataset.qa = 1; r.click(); const sv = [...document.querySelectorAll('button')].find(x => /Save marks/.test(x.textContent)); sv && sv.click(); }
+      });
+      const info = await p.evaluate(() => { const s = document.querySelector('.slide'); return s ? [+s.dataset.idx, +s.dataset.total] : null; });
+      if (!info) { problems.push(`[${theme}] ${mid}: no slide rendered`); break; }
+      if (guard === 2 && theme === 'dark') await p.screenshot({ path: path.join(OUT, `${mid}-slide-${theme}.png`) });
+      const lb = await p.$('#slideListen:not([hidden])');
+      if (lb && !listened) { listened = true; await lb.click(); await p.waitForTimeout(150); await lb.click(); }
+      if (guard % 3 === 0) await overflow(mid + ' slide ' + info[0]);
+      if (info[0] >= info[1] - 1) break;
+      await p.click('#slideNext'); await p.waitForTimeout(60);
     }
     await p.waitForTimeout(1500); // let 3D/timers settle
     // wait for async 3D loads then solve again
