@@ -47,12 +47,12 @@ function glaucomaSim(cfg) {
     ctx.clearRect(0, 0, W, H);
     const lensX = 305 - close * 16;
     // sclera / wall
-    ctx.lineWidth = 3; ctx.strokeStyle = muted; ctx.beginPath(); ctx.moveTo(244, 48); ctx.lineTo(640, 24); ctx.moveTo(244, 332); ctx.lineTo(640, 356); ctx.stroke();
+    ctx.lineWidth = 5; ctx.strokeStyle = muted; ctx.beginPath(); ctx.moveTo(244, 48); ctx.lineTo(640, 24); ctx.moveTo(244, 332); ctx.lineTo(640, 356); ctx.stroke();
     // cornea
     ctx.strokeStyle = cyan; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(246, 48); ctx.quadraticCurveTo(100, 190, 246, 332); ctx.stroke();
     if (mode === 'narrow' && close > .6) { ctx.fillStyle = 'rgba(200,220,230,' + (.25 * close) + ')'; ctx.beginPath(); ctx.moveTo(246, 48); ctx.quadraticCurveTo(100, 190, 246, 332); ctx.quadraticCurveTo(140, 190, 246, 48); ctx.fill(); }
     // canal of Schlemm
-    [[262, 52], [262, 328]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fillStyle = mode === 'narrow' && close > .7 ? coral : teal; ctx.fill(); });
+    [[262, 52], [262, 328]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fillStyle = mode === 'narrow' && close > .7 ? coral : teal; ctx.fill(); });
     // lens
     ctx.fillStyle = 'rgba(180,200,230,.35)'; ctx.strokeStyle = line; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(lensX, 190, 30, 72, 0, 0, 7); ctx.fill(); ctx.stroke();
     // ciliary body
@@ -65,11 +65,16 @@ function glaucomaSim(cfg) {
       ctx.moveTo(rootX, rootY); ctx.quadraticCurveTo(262 - close * 22, (ry + 190) / 2, 270, 190 - s * pupil); ctx.stroke();
     });
     // particles
-    parts.forEach(p => { const [x, y] = pt(p.path, p.u); ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 7); ctx.fillStyle = p.u > .85 ? teal : cyan; ctx.globalAlpha = p.u > .95 ? 1 - (p.u - .95) * 20 : 1; ctx.fill(); ctx.globalAlpha = 1; });
-    // optic nerve hint (right)
-    ctx.fillStyle = nerve > .5 ? coral : muted; ctx.font = '600 12px ' + cssv('--f-mono'); ctx.fillText('optic nerve →', 520, 196);
-    ctx.fillStyle = muted; ctx.font = '600 11px ' + cssv('--f-mono');
-    ctx.fillText('cornea', 120, 196); ctx.fillText('anterior chamber', 160, 112); ctx.fillText('iris', 236, 150); ctx.fillText('lens', lensX - 12, 194); ctx.fillText('canal of Schlemm', 276, 70); ctx.fillText('ciliary body', 306, 100); ctx.fillText('posterior chamber', 292, 130);
+    parts.forEach(p => { const [x, y] = pt(p.path, p.u); ctx.beginPath(); ctx.arc(x, y, 3.6, 0, 7); ctx.fillStyle = p.u > .85 ? teal : cyan; ctx.globalAlpha = p.u > .95 ? 1 - (p.u - .95) * 20 : 1; ctx.fill(); ctx.globalAlpha = 1; });
+    // labels (large enough for a phone)
+    ctx.font = '700 22px ' + cssv('--f-mono');
+    ctx.fillStyle = cyan; ctx.fillText('cornea', 40, 196);
+    ctx.fillStyle = muted; ctx.fillText('anterior', 150, 120); ctx.fillText('chamber', 150, 144);
+    ctx.fillStyle = amber; ctx.fillText('iris', 212, 236);
+    ctx.fillStyle = fg; ctx.fillText('lens', lensX + 40, 196);
+    ctx.fillStyle = teal; ctx.fillText('canal of Schlemm', 286, 66);
+    ctx.fillStyle = muted; ctx.fillText('ciliary body', 320, 300);
+    ctx.fillStyle = nerve > .5 ? coral : muted; ctx.fillText('→ optic nerve', 440, 250);
   }
   const stop = onVisibleLoop(stage, dt => {
     const target = mode === 'narrow' ? 1 : 0; close += (target - close) * Math.min(1, dt / 600);
@@ -156,7 +161,7 @@ function epistaxisSim(cfg) {
   const box = ixShell(cfg.id, 'Simulator', 'Nosebleed on scene', 'Set the patient up the way your notes say and stop the bleed. Wrong positions show you why they fail.', 'A60–A63, B63, B65–B67');
   const st = { pos: 'upright', pinch: false, t: 0, type: 'anterior', trauma: false, sniff: false, est: false, older: false };
   const svgNS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('viewBox', '0 0 400 260'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Patient profile');
+  const svg = document.createElementNS(svgNS, 'svg'); svg.setAttribute('viewBox', '20 -50 380 330'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Patient profile');
   svg.innerHTML = `<g id="head" transform="rotate(0 200 170)">
     <path d="M150 60 C 150 10, 260 10, 262 70 L 262 96 L 286 132 L 266 138 L 268 160 C 268 180, 250 196, 222 196 L 214 250 L 168 250 L 170 186 C 140 170, 140 100, 150 60 Z" fill="#e8c3a6" stroke="#9c7a62" stroke-width="2"/>
     <path id="airway" d="M262 132 C 230 136, 214 150, 206 176 L 200 250" fill="none" stroke="#c98f86" stroke-width="5" stroke-dasharray="4 4" opacity=".7"/>

@@ -30,7 +30,7 @@ for (const theme of themes) {
   await p.addInitScript(() => { window.__gains = []; const O = window.AudioContext; if (!O) return; window.AudioContext = class extends O { createGain() { const g = super.createGain(); const orig = g.gain.exponentialRampToValueAtTime.bind(g.gain); g.gain.exponentialRampToValueAtTime = (v, t) => { window.__gains.push(v); return orig(v, t); }; return g; } }; });
   await p.goto('file://' + testFile);
   await p.waitForTimeout(300);
-  const overflow = async (where) => { const o = await p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth); if (o > 1) problems.push(`[${theme}] horizontal overflow ${o}px at ${where}`); };
+  const overflow = async (where) => { const o = await p.evaluate(() => { const W = innerWidth; const d = document.documentElement.scrollWidth - W; if (d <= 1) return null; const out = []; document.querySelectorAll('body *').forEach(e => { const b = e.getBoundingClientRect(); let a = e.parentElement, clip = false; while (a && a !== document.body && a !== document.documentElement) { const ox = getComputedStyle(a).overflowX; if (ox !== 'visible') { clip = true; break; } a = a.parentElement; } if (!clip && b.right > W + 1 && b.width > 0) out.push(e.tagName + '.' + e.className + ' "' + (e.textContent || '').slice(0, 30) + '"'); }); return d + 'px: ' + out.slice(-3).join(' | '); }); if (o) problems.push(`[${theme}] horizontal overflow ${o} at ${where}`); };
   await overflow('home');
   if (theme === 'dark') await p.screenshot({ path: path.join(OUT, `home-${theme}.png`) });
   const mods = await p.evaluate(() => window.__EENT.MODS.map(m => m.id));

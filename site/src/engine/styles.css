@@ -305,3 +305,5 @@ input[type="range"]{width:100%;accent-color:var(--teal);min-height:36px}
 .ix>*,.card>*,.qcard>*,.stack>*{min-width:0}
 .howto .pill,.body .pill{white-space:normal}
 .token{white-space:normal;overflow-wrap:anywhere}
+.pill{max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+.ixfoot>span,.meta{min-width:0;max-width:100%}

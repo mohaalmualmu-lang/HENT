@@ -186,7 +186,7 @@ function lightbox(content, title) {
   return lb;
 }
 function imgEl(id, alt, extra) {
-  return h('img', Object.assign({ src: IMG[id] || '', alt: alt || '', loading: 'lazy', decoding: 'async' }, extra || {}));
+  return h('img', Object.assign({ src: IMG[id] || '', alt: alt || '', decoding: 'async' }, extra || {}));
 }
 function zoomable(id, alt) {
   const im = imgEl(id, alt); im.addEventListener('click', () => lightbox(imgEl(id, alt), alt)); return im;
