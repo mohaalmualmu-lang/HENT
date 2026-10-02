@@ -1,0 +1,5 @@
+[dark] m1: done=true ixMounted=10 webgl=1 qcards=47 ix=m1-tears:done m1-eye3d:done m1-t1match:done m1-drops:done m1-irrsim:done m1-lenstriage:done m1-prosort:done m1-skill191:done fig-eye:done fig-lacrimal:done
+[dark] audio peak gain 0.05 (416 ramps)
+
+PROBLEMS:
+none

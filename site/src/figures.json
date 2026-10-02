@@ -1,0 +1,168 @@
+{
+  "eye": {
+    "src": "S006_7171.jpg", "title": "Structures of the eye", "ref": "A6, B5", "m": "m1",
+    "notice": "Aqueous humor fills the front compartment (anterior + posterior chambers); vitreous humor fills the big back compartment. The optic nerve leaves at the back.",
+    "labels": [
+      ["Anterior compartment filled with aqueous humor", "الحجرة الأمامية (الخلط المائي)", [0,5,430,75]],
+      ["Posterior compartment filled with vitreous humor", "الحجرة الخلفية (الخلط الزجاجي)", [890,0,440,65]],
+      ["Anterior chamber", "الغرفة الأمامية", [50,150,120,62]],
+      ["Posterior chamber", "الغرفة الخلفية", [250,150,122,62]],
+      ["Iris", "القزحية", [150,313,44,28]],
+      ["Cornea", "القرنية", [47,391,100,27]],
+      ["Pupil", "البؤبؤ", [95,478,67,31]],
+      ["Lens", "العدسة", [152,546,66,26]],
+      ["Suspensory ligaments", "الأربطة المعلّقة", [102,628,162,68]],
+      ["Ciliary muscle", "العضلة الهدبية", [69,745,190,31]],
+      ["Fovea", "النقرة", [1282,135,83,26]],
+      ["Vein", "الوريد", [1283,251,59,27]],
+      ["Artery", "الشريان", [1293,533,86,33]],
+      ["Optic nerve", "العصب البصري", [1221,644,156,32]],
+      ["Retina", "الشبكية", [1171,726,88,27]],
+      ["Choroid", "المشيمية", [1132,793,106,27]],
+      ["Sclera", "الصلبة", [1092,861,87,27]]
+    ]
+  },
+  "lacrimal": {
+    "src": "S007_8195.jpg", "title": "Lacrimal system (tear glands and ducts)", "ref": "A7, B4", "m": "m1",
+    "notice": "Tears are made in the lacrimal gland (upper outer corner), wash across the eye and drain at the inner corner into the nasolacrimal duct, toward the nose.",
+    "labels": [
+      ["Lacrimal gland", "الغدة الدمعية", [10,0,218,36]],
+      ["Pupil", "البؤبؤ", [206,44,80,34]],
+      ["Iris", "القزحية", [318,66,52,32]],
+      ["Nasolacrimal duct", "القناة الأنفية الدمعية", [390,185,190,70]],
+      ["Sclera", "الصلبة", [0,394,96,29]],
+      ["Conjunctiva", "الملتحمة", [294,464,176,30]]
+    ]
+  },
+  "ear": {
+    "src": "S040_40964.jpg", "title": "The ear: three anatomic parts", "ref": "A40, B41", "m": "m3",
+    "notice": "External ear = pinna + canal + outer eardrum. Middle ear = inner eardrum + ossicles (malleus, incus, stapes). Inner ear = cochlea (hearing) + semicircular canals (balance).",
+    "labels": [
+      ["External ear", "الأذن الخارجية", [376,4,160,26]],
+      ["Middle ear", "الأذن الوسطى", [741,4,138,26]],
+      ["Inner ear", "الأذن الداخلية", [988,4,118,26]],
+      ["Auricle (Pinna)", "الصيوان", [2,122,96,62]],
+      ["External auditory canal", "القناة السمعية الخارجية", [588,104,110,88]],
+      ["Tympanic membrane", "طبلة الأذن", [728,104,142,58]],
+      ["Semicircular canals", "القنوات الهلالية", [914,103,162,58]],
+      ["Oval window", "النافذة البيضاوية", [1142,183,168,27]],
+      ["Vestibular nerve", "العصب الدهليزي", [1186,226,130,58]],
+      ["Cochlear nerve", "العصب القوقعي", [1261,383,120,58]],
+      ["Cochlea", "القوقعة", [1261,454,109,27]],
+      ["Vestibule", "الدهليز", [1349,529,120,27]],
+      ["Round window", "النافذة المستديرة", [1349,599,90,57]],
+      ["Eustachian (auditory) tube", "قناة استاكيوس", [1349,676,147,88]],
+      ["Malleus", "المطرقة", [650,665,102,27]],
+      ["Incus", "السندان", [762,665,70,27]],
+      ["Stapes", "الركاب", [839,665,93,32]],
+      ["Ossicles", "العظيمات السمعية", [734,729,112,27]]
+    ]
+  },
+  "nasal": {
+    "src": "S057_58372.jpg", "title": "Nasal cavity: septum and turbinates", "ref": "A57, B60", "m": "m4",
+    "notice": "Air (blue arrows) flows over three turbinates, which warm and humidify it. The septum divides the two nasal cavities.",
+    "labels": [
+      ["Septum", "الحاجز الأنفي", [471,84,91,29]],
+      ["Frontal sinus", "الجيب الجبهي", [567,163,149,23]],
+      ["Superior turbinate", "القرين العلوي", [0,356,210,29]],
+      ["Middle turbinate", "القرين الأوسط", [4,405,187,23]],
+      ["Inferior turbinate", "القرين السفلي", [5,448,190,24]]
+    ]
+  },
+  "sinuses": {
+    "src": "S058_59396.jpg", "title": "The paranasal sinuses", "ref": "A58, B61", "m": "m4",
+    "notice": "Four sinus groups connect with the nose: frontal (forehead), ethmoid (between the eyes), maxillary (cheeks), sphenoid (deep, behind).",
+    "labels": [
+      ["Frontal", "الجبهي", [660,301,65,20]],
+      ["Ethmoid", "الغربالي", [660,363,78,19]],
+      ["Maxillary", "الفكي", [2,433,85,24]],
+      ["Sphenoid (deep)", "الوتدي (عميق)", [659,424,91,49]]
+    ]
+  },
+  "teeth": {
+    "src": "S072_72708.jpg", "title": "The mouth: teeth", "ref": "A72, B77", "m": "m5",
+    "notice": "Assessment begins at the opening of the mouth with the teeth: incisors at the front, then canine, premolars and molars.",
+    "labels": [
+      ["Molars", "الأضراس", [575,537,90,26]],
+      ["Premolars", "الضواحك", [558,621,136,26]],
+      ["Canine", "الناب", [525,694,96,27]],
+      ["Incisors", "القواطع", [491,767,103,26]]
+    ]
+  },
+  "tooth": {
+    "src": "S072_72709.jpg", "title": "Tooth cross-section", "ref": "A72, B77", "m": "m5",
+    "notice": "The pulp and root canal carry nerves and blood vessels: a cavity that reaches them lets bacteria spread toward the gums, bone and neck (dental abscess).",
+    "labels": [
+      ["Enamel", "المينا", [420,72,86,26]],
+      ["Dentin", "العاج", [424,111,70,22]],
+      ["Periodontal membrane", "الغشاء حول السني", [424,138,243,22]],
+      ["Pulp with nerves and blood vessels", "اللب (أعصاب وأوعية)", [427,163,226,47]],
+      ["Root canal combining nerves and blood vessels", "قناة الجذر", [457,357,238,79]],
+      ["Crown", "التاج", [731,80,71,22]],
+      ["Root", "الجذر", [732,384,52,22]]
+    ]
+  },
+  "glands": {
+    "src": "S073_73732.jpg", "title": "Mouth structures: salivary glands", "ref": "A73, B78", "m": "m5",
+    "notice": "Shown on the slide that lists the nerves of the mouth (hypoglossal, glossopharyngeal, trigeminal, facial). Parotid sits in front of the ear; submandibular and sublingual sit under the jaw and tongue.",
+    "labels": [
+      ["Parotid duct", "قناة النكفية", [615,230,90,58]],
+      ["Parotid gland", "الغدة النكفية", [615,331,90,64]],
+      ["Masseter muscle", "العضلة الماضغة", [615,433,116,59]],
+      ["Submandibular duct", "قناة تحت الفك", [615,535,189,59]],
+      ["Sublingual gland", "الغدة تحت اللسان", [8,637,130,64]],
+      ["Submandibular gland", "الغدة تحت الفك", [615,637,189,64]]
+    ]
+  },
+  "neck": {
+    "src": "S074_74756.jpg", "title": "The anterior neck", "ref": "A74, B79", "m": "m5",
+    "notice": "Midline from top down: thyroid cartilage, cricothyroid membrane, cricoid cartilage, trachea. Carotid arteries run either side under the sternocleidomastoid.",
+    "labels": [
+      ["Thyroid cartilage", "الغضروف الدرقي", [78,207,85,50]],
+      ["Carotid arteries", "الشرايين السباتية", [677,208,92,50]],
+      ["Sternocleidomastoid muscle", "العضلة القصية الترقوية الخشائية", [678,337,121,71]],
+      ["Trachea", "القصبة الهوائية", [616,640,79,20]],
+      ["Cricoid cartilage", "الغضروف الحلقي", [99,677,156,25]],
+      ["Cricothyroid membrane", "الغشاء الحلقي الدرقي", [341,677,223,25]]
+    ]
+  },
+  "arteries": {
+    "src": "S075_75780.jpg", "title": "Major arteries of the neck", "ref": "A75, B80", "m": "m5",
+    "notice": "Common carotid splits into internal and external carotid (carotid sinus at the split). Vertebral artery runs beside the cervical vertebrae at the back.",
+    "labels": [
+      ["Internal carotid", "السباتي الداخلي", [2,336,155,21]],
+      ["Carotid sinus", "الجيب السباتي", [1,385,132,21]],
+      ["Vertebral", "الفقري", [1,491,91,21]],
+      ["Subclavian", "تحت الترقوة", [1,669,110,21]],
+      ["Facial", "الوجهي", [675,319,59,21]],
+      ["External carotid", "السباتي الخارجي", [675,359,83,44]],
+      ["Superior thyroid", "الدرقي العلوي", [674,448,88,48]],
+      ["Common carotid", "السباتي الأصلي", [674,584,92,46]],
+      ["Brachiocephalic", "العضدي الرأسي", [618,670,159,26]]
+    ]
+  },
+  "veins": {
+    "src": "S076_76803.jpg", "title": "Veins of the neck", "ref": "A76, B81", "m": "m5",
+    "notice": "Internal and external jugular veins drain the head; they join the subclavian, then the brachiocephalic, then the superior vena cava.",
+    "labels": [
+      ["Retromandibular", "خلف الفك", [3,275,233,27]],
+      ["Internal jugular", "الوداجي الداخلي", [3,326,210,34]],
+      ["External jugular", "الوداجي الخارجي", [3,392,220,34]],
+      ["Internal jugular (lower)", "الوداجي الداخلي (أسفل)", [3,458,210,34]],
+      ["Subclavian", "تحت الترقوة", [1,525,154,28]],
+      ["Right brachiocephalic", "العضدي الرأسي الأيمن", [3,594,300,34]],
+      ["Facial", "الوجهي", [1066,395,81,28]],
+      ["Lingual", "اللساني", [1063,457,101,33]],
+      ["Superior thyroid", "الدرقي العلوي", [1065,529,223,34]],
+      ["Superior vena cava", "الوريد الأجوف العلوي", [1065,659,271,30]]
+    ]
+  },
+  "tmj": {
+    "src": "S104_105476.jpg", "title": "Temporomandibular joint", "ref": "A104, B111", "m": "m5",
+    "notice": "The TMJ is where the posterior condyle of the mandible meets the temporal bone, just in front of the ear.",
+    "labels": [
+      ["Temporal bone", "العظم الصدغي", [584,206,194,29]],
+      ["Temporomandibular joint", "المفصل الصدغي الفكي", [482,385,320,31]]
+    ]
+  }
+}
