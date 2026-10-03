@@ -1,0 +1,23 @@
+{
+  "skill_name": "read-aloud",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "عندي موقع مذاكرة HTML فيه بطاقات .lesson-card، أبي زر استماع يقرأ النص ويظلل الكلمة اللي تنقال، ويكمل من نفس المكان لو وقفته",
+      "expected_output": "read-aloud.js copied into the project, ReadAloud.init({targets:'.lesson-card', ...}) added, colours mapped to the site tokens, check.mjs run with all checks passing, short Arabic summary with device notes.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Add text-to-speech with word highlighting to my Next.js blog posts (app/posts/[slug]/page.tsx). The site has a dark mode toggle that sets data-theme on <html> and a fixed bottom nav on mobile.",
+      "expected_output": "Client-only import, own React ListenButton calling ReadAloud.toggle, --ra-* tokens under [data-theme=dark], ReadAloud.stop() on route change, verification run.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "/read-aloud for the flashcards page in this repo, but don't read the citation numbers like (Smith 2020) and only read the back of a card after it is flipped",
+      "expected_output": "clean() option removing author-year citations, targets on the card back, hidden backs not read until shown, check passes.",
+      "files": []
+    }
+  ]
+}
