@@ -1,6 +1,6 @@
 # Rollback guide (nothing is deleted — history stays)
 
-Restore points (git tags), oldest to newest:
+Restore points, oldest to newest. Each exists as a local tag `restore/...` and as a GitHub branch `claude/restore-...` (the server here does not accept tag pushes, so the branches are the copy that lives on GitHub; use `origin/claude/restore-N-name` in place of `restore/N-name` below):
 
 | tag | what the site had at that point |
 |---|---|
@@ -11,13 +11,13 @@ Restore points (git tags), oldest to newest:
 | `restore/5-read-aloud-skill` | + reusable `read-aloud` skill (site itself unchanged) |
 
 ## Look at an old version without changing anything
-    git fetch --tags
-    git show restore/2-slide-mode:dist/index.html > old.html      # open old.html in a browser
+    git fetch origin
+    git show origin/claude/restore-2-slide-mode:dist/index.html > old.html      # open old.html in a browser
 
 ## Go back for good (safe: adds a new commit, keeps history)
-    git revert --no-edit restore/3-reading-player..HEAD            # undo everything after that point
+    git revert --no-edit origin/claude/restore-3-reading-player..HEAD            # undo everything after that point
     # or restore just the built site file:
-    git checkout restore/3-reading-player -- dist/index.html && git commit -m "Roll back site to reading player"
+    git checkout origin/claude/restore-3-reading-player -- dist/index.html && git commit -m "Roll back site to reading player"
 
 ## Put the old version on the published link
 Publish the old `dist/index.html` to the same artifact URL (the artifact also keeps its own version history in the Share/Versions menu).
